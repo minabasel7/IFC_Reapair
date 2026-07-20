@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { UploadCloud, File as FileIcon, X, CheckCircle2, AlertTriangle, Loader2, Download, Shield as ShieldIcon } from "lucide-react";
+import { UploadCloud, File as FileIcon, X, CheckCircle2, AlertTriangle, Loader2, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export function FileUploader() {
