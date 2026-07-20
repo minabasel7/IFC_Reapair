@@ -213,7 +213,7 @@ export function FileUploader() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   {report.download_url && (
-                    <a href={report.download_url} download className="flex items-center justify-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors">
+                    <a href={report.download_url} download={file ? `repaired_${file.name}` : "repaired_model.ifc"} className="flex items-center justify-center gap-2 bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors">
                       <Download className="w-4 h-4" /> Download Repaired IFC
                     </a>
                   )}
