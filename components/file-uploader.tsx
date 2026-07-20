@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { UploadCloud, File as FileIcon, X, CheckCircle2, AlertTriangle, Loader2, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Client } from "@gradio/client";
 
 export function FileUploader() {
   const [file, setFile] = useState<File | null>(null);
@@ -33,9 +34,6 @@ export function FileUploader() {
     setStatus("uploading");
     setProgress(10);
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
       // Fake progress for UX
       const progressInterval = setInterval(() => {
@@ -53,29 +51,32 @@ export function FileUploader() {
         });
       }, 500);
 
-      // We use NEXT_PUBLIC_API_URL so the backend can be hosted anywhere
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api";
+      // Hardcoded to point directly to Hugging Face
+      const spaceName = "minabasely7/ifc-repair-api";
       
-      const response = await fetch(`${apiUrl}/process`, {
-        method: "POST",
-        body: formData,
-      });
+      const app = await Client.connect(spaceName);
+      const result = await app.predict("/predict", [
+        file,
+      ]);
 
       clearInterval(progressInterval);
 
-      if (!response.ok) {
-        let errMessage = "Failed to process file";
-        try {
-          const errData = await response.json();
-          if (errData.detail) errMessage = errData.detail;
-        } catch (e) {}
-        throw new Error(errMessage);
+      const responseData = result.data as any[];
+
+      if (!responseData || responseData.length < 2) {
+        throw new Error("Invalid response from API");
       }
 
-      const data = await response.json();
+      const reportData = responseData[0] as any;
+      const returnedFile = responseData[1] as any;
+
+      if (returnedFile && returnedFile.url) {
+        reportData.download_url = returnedFile.url;
+      }
+
       setProgress(100);
       setStatus("success");
-      setReport(data);
+      setReport(reportData);
 
     } catch (error: any) {
       console.error(error);
