@@ -34,9 +34,6 @@ export function FileUploader() {
     setStatus("uploading");
     setProgress(10);
 
-    const formData = new FormData();
-    formData.append("file", file);
-
     try {
       // Fake progress for UX
       const progressInterval = setInterval(() => {
@@ -64,12 +61,14 @@ export function FileUploader() {
 
       clearInterval(progressInterval);
 
-      if (!result || !result.data || result.data.length < 2) {
+      const responseData = result.data as any[];
+
+      if (!responseData || responseData.length < 2) {
         throw new Error("Invalid response from API");
       }
 
-      const reportData = result.data[0] as any;
-      const returnedFile = result.data[1] as any;
+      const reportData = responseData[0] as any;
+      const returnedFile = responseData[1] as any;
 
       if (returnedFile && returnedFile.url) {
         reportData.download_url = returnedFile.url;
