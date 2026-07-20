@@ -2,9 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { useDropzone } from "react-dropzone";
-import { UploadCloud, File as FileIcon, X, CheckCircle2, AlertTriangle, Loader2, Download } from "lucide-react";
+import { UploadCloud, File as FileIcon, X, CheckCircle2, AlertTriangle, Loader2, Download, Shield as ShieldIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Client } from "@gradio/client";
 
 export function FileUploader() {
   const [file, setFile] = useState<File | null>(null);
@@ -51,27 +50,40 @@ export function FileUploader() {
         });
       }, 500);
 
-      // Hardcoded to point directly to Hugging Face
-      const spaceName = "minabasely7/ifc-repair-api";
-      
-      const app = await Client.connect(spaceName);
-      const result = await app.predict("/predict", [
-        file,
-      ]);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Using the local Vercel API endpoint
+      const response = await fetch("/api/process", {
+        method: "POST",
+        body: formData,
+      });
 
       clearInterval(progressInterval);
 
-      const responseData = result.data as any[];
-
-      if (!responseData || responseData.length < 2) {
-        throw new Error("Invalid response from API");
+      if (!response.ok) {
+        let errMessage = "Failed to process file";
+        try {
+          const errData = await response.json();
+          if (errData.error) errMessage = errData.error;
+        } catch (e) {}
+        throw new Error(errMessage);
       }
 
-      const reportData = responseData[0] as any;
-      const returnedFile = responseData[1] as any;
+      const responseData = await response.json();
+      
+      const reportData = responseData.report;
 
-      if (returnedFile && returnedFile.url) {
-        reportData.download_url = returnedFile.url;
+      if (responseData.repaired_file_base64) {
+        // Convert Base64 to Blob URL for downloading
+        const byteCharacters = atob(responseData.repaired_file_base64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: "application/octet-stream" });
+        reportData.download_url = URL.createObjectURL(blob);
       }
 
       setProgress(100);
