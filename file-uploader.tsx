@@ -51,8 +51,8 @@ export function FileUploader() {
         });
       }, 500);
 
-      // We use NEXT_PUBLIC_API_URL so the backend can be hosted anywhere
-      const spaceName = process.env.NEXT_PUBLIC_API_URL || "minabasely7/ifc-repair-api";
+      // Hardcoded to point directly to Hugging Face
+      const spaceName = "minabasely7/ifc-repair-api";
       
       const app = await Client.connect(spaceName);
       const result = await app.predict("/predict", [
