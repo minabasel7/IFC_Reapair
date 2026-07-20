@@ -1,6 +1,7 @@
 import os
 import sys
 import shutil
+import time
 
 # Tell Vercel's Python runtime to look for modules inside the 'api' folder
 sys.path.append(os.path.dirname(__file__))
@@ -42,19 +43,23 @@ def process_file():
         stats = parser.get_basic_stats()
         
         # 2. Validate
+        t_start = time.time()
         validator = IFCValidator(model)
-        issues = validator.validate()
+        validation_results = validator.validate()
+        val_time = round((time.time() - t_start) * 1000, 2)
         
         # 3. Repair
-        repair_engine = IFCRepair(model, issues)
+        t_start = time.time()
+        repair_engine = IFCRepair(model, validation_results["issues"])
         repairs_made = repair_engine.repair()
+        rep_time = round((time.time() - t_start) * 1000, 2)
         
         # Save repaired model
         parser.save_model(temp_output_path)
         
         # 4. Generate Report
-        report_generator = ReportGenerator(stats, issues, repairs_made)
-        report = report_generator.generate_summary()
+        report_generator = ReportGenerator(stats, validation_results, repairs_made, val_time, rep_time)
+        report = report_generator.generate_json()
         
         # Read the repaired file back into memory to send it to the client
         with open(temp_output_path, "rb") as f:
