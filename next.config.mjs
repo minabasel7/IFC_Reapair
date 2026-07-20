@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Rely on Vercel's native /api directory for Python serverless functions.
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        // Route all /api/* requests to the Python serverless function at /api/index.py
+        destination: '/api/',
+      },
+    ]
+  },
 };
 
 export default nextConfig;
